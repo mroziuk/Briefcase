@@ -8,6 +8,7 @@ using Azure.AI.DocumentIntelligence;
 using Briefcase.Core.Interfaces;
 using Briefcase.Core.Models;
 using Azure.Identity;
+using Microsoft.Identity.Client;
 
 public class DocumentIntelligenceService : IDocumentIntelligenceService
 {
@@ -15,13 +16,20 @@ public class DocumentIntelligenceService : IDocumentIntelligenceService
 
     public DocumentIntelligenceService(IKeyVaultService keyVaultService)
     {
-        var connectionString = keyVaultService.GetSecret("briefcaseocr-url");
-        _documentClient = new DocumentIntelligenceClient(new Uri(connectionString), new DefaultAzureCredential());
+        string endpoint = keyVaultService.GetSecret("briefcaseocr-url");
+        string key = keyVaultService.GetSecret("briefcaseocr-key1");
+        _documentClient = new DocumentIntelligenceClient(new Uri(endpoint), new AzureKeyCredential(key));
     }
-
+    public async Task<string> ExtractTextAsync(string blobUrl)
+    {
+        var options = new AnalyzeDocumentOptions("prebuilt-read", new Uri(blobUrl));
+        var operation = await _documentClient.AnalyzeDocumentAsync(WaitUntil.Completed, options);
+        return operation.Value.Content;
+    }
     public async Task<string> ExtractTextAsync(Stream documentStream)
     {
-        var options = new AnalyzeDocumentOptions("prebuilt-read", new BinaryData(documentStream));
+        var byteArray = new BinaryData(GetBytes(documentStream));
+        var options = new AnalyzeDocumentOptions("prebuilt-read", byteArray);
         var operation = await _documentClient.AnalyzeDocumentAsync(WaitUntil.Completed, options);
         var result = operation.Value;
 
@@ -52,9 +60,22 @@ public class DocumentIntelligenceService : IDocumentIntelligenceService
 
     public async Task<AnalyzeResult> AnalyzeWithCustomModelAsync(Stream documentStream, string modelId)
     {
-        var options = new AnalyzeDocumentOptions(modelId, new BinaryData(documentStream));
+        var options = new AnalyzeDocumentOptions(modelId, new BinaryData(GetBytes(documentStream)));
         var operation = await _documentClient.AnalyzeDocumentAsync(WaitUntil.Completed, options);
         return operation.Value;
+    }
+    public async Task<AnalyzeResult> ClassifyDocument(Stream stream)
+    {
+        var options = new ClassifyDocumentOptions("food-trip-document", new BinaryData(GetBytes(stream)));
+        var operation = await _documentClient.ClassifyDocumentAsync(WaitUntil.Completed, options);
+        var result = operation.Value;
+        return result;
+    }
+    private static byte[] GetBytes(Stream stream)
+    {
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        return memoryStream.ToArray();
     }
 }
 

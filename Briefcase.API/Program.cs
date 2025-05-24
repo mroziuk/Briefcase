@@ -12,9 +12,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
+builder.Services.AddScoped<IKeyVaultService, KeyVaultService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDocumentIntelligenceService, DocumentIntelligenceService>();
-builder.Services.AddScoped<IKeyVaultService, KeyVaultService>();
 
 builder.Services.AddCors(options =>
 {

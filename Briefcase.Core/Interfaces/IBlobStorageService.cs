@@ -5,4 +5,5 @@ public interface IBlobStorageService
     Task<Stream> DownloadAsync(string containerName, string blobName);
     Task<bool> DeleteAsync(string containerName, string blobName);
     Task<bool> ExistsAsync(string containerName, string blobName);
+    string GetBlobServiceUri();
 }

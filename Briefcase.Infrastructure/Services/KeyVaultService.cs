@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Briefcase.Core.Interfaces;
@@ -13,7 +14,15 @@ public class KeyVaultService : IKeyVaultService
     {
         var keyVaultUrl = configuration["AzureKeyVault:Url"];
         ArgumentNullException.ThrowIfNull(nameof(keyVaultUrl));
-        _secretClient = new SecretClient(new Uri(keyVaultUrl!), new DefaultAzureCredential());
+
+        TokenCredential credential = new DefaultAzureCredential();
+//#if DEBUG
+//        string tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID") ?? throw new InvalidOperationException("AZURE_TENANT_ID environment variable is not set.");
+//        string clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID") ?? throw new InvalidOperationException("AZURE_CLIENT_ID environment variable is not set.");
+//        string clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET") ?? throw new InvalidOperationException("AZURE_CLIENT_SECRET environment variable is not set.");
+//        credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+//#endif
+        _secretClient = new SecretClient(new Uri(keyVaultUrl!), credential);
     }
 
     public async Task SetSecretAsync(string name, string value)

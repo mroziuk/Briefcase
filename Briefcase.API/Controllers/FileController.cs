@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Briefcase.API.Controllers;
 [ApiController]
 [Route("[controller]")]
-public class FileController(IBlobStorageService blobStorageService) : ControllerBase
+public class FileController(IBlobStorageService blobStorageService, IDocumentIntelligenceService documentIntelligenceService) : ControllerBase
 
 {
     private readonly IBlobStorageService _blobStorageService = blobStorageService;
+    private readonly IDocumentIntelligenceService _documentIntelligenceService = documentIntelligenceService;
     [HttpPost]
     public async Task<ActionResult> UploadFile(IFormFile file)
     {
@@ -19,6 +20,9 @@ public class FileController(IBlobStorageService blobStorageService) : Controller
         {
             await _blobStorageService.UploadAsync(containerName, blobName, stream, file.ContentType);
         }
-        return Ok(new { BlobName = blobName });
+        var blobUrl = $"{_blobStorageService.GetBlobServiceUri()}/{containerName}/{blobName}";
+        //return Ok(new { BlobUrl = blobUrl, BlobName = blobName });
+        var text = await _documentIntelligenceService.ExtractTextAsync(blobUrl);
+        return Ok(new { BlobUrl = blobUrl, BlobName = blobName, Text = text });
     }
 }

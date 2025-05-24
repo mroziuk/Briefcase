@@ -54,4 +54,9 @@ public class BlobStorageService : IBlobStorageService
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
         return containerClient;
     }
+
+    public string GetBlobServiceUri()
+    {
+        return _blobServiceClient.Uri.ToString();
+    }
 }
